@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  #   nginx:
+  #     build:
+  #       context: ./nginx
+  #       dockerfile: Dockerfile
+  #     container_name: inception-nginx
+  #     ports:
+  #       - '443:443'
+  #     volumes:
+  #       - inception-nginx-log:/var/log/nginx
+  #       # bind mount for development
+  #       - ./nginx/html:/www:ro
+  #     depends_on:
+  #       - mariadb
+  #       - wordpress
+  mariadb:
+    build:
+      context: ./mariadb
+      dockerfile: Dockerfile
+    container_name: inception-mariadb
+    env_file:
+      - .env
+    volumes:
+      - inception-mariadb:/var/lib/mysql
+        #   wordpress:
+        #     build:
+        #       context: ./wordpress
+        #       dockerfile: Dockerfile
+        #     container_name: inception-wordpress
+        #     env_file:
+        #       - .env
+        #     volumes:
+        #       - inception-wordpress:/var/www/html
+        #     depends_on:
+        #       - mariadb
+volumes:
+  inception-nginx-log:
+    name: 'inception-nginx-log'
+  inception-mariadb:
+    name: 'inception-mariadb'
+  inception-wordpress:
+    name: 'inception-wordpress'
+
