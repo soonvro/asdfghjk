@@ -1,40 +1,50 @@
 version: '3.8'
 
 services:
-  #   nginx:
-  #     build:
-  #       context: ./nginx
-  #       dockerfile: Dockerfile
-  #     container_name: inception-nginx
-  #     ports:
-  #       - '443:443'
-  #     volumes:
-  #       - inception-nginx-log:/var/log/nginx
-  #       # bind mount for development
-  #       - ./nginx/html:/www:ro
-  #     depends_on:
-  #       - mariadb
-  #       - wordpress
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: inception-nginx
+    image: inception-nginx
+    ports:
+      - '80:80'
+    volumes:
+      - inception-nginx-log:/var/log/nginx
+    networks:
+      - inception-network
+    depends_on:
+      - mariadb
+      - wordpress
+  wordpress:
+    restart: always
+    build:
+      context: ./wordpress
+      dockerfile: Dockerfile
+    container_name: inception-wordpress
+    env_file:
+      - .env
+    volumes:
+      - inception-wordpress:/var/www/html/wordpress
+    networks:
+      - inception-network
+    depends_on:
+      - mariadb
   mariadb:
+    restart: always
     build:
       context: ./mariadb
       dockerfile: Dockerfile
+    image: inception-mariadb
     container_name: inception-mariadb
     env_file:
       - .env
     volumes:
       - inception-mariadb:/var/lib/mysql
-        #   wordpress:
-        #     build:
-        #       context: ./wordpress
-        #       dockerfile: Dockerfile
-        #     container_name: inception-wordpress
-        #     env_file:
-        #       - .env
-        #     volumes:
-        #       - inception-wordpress:/var/www/html
-        #     depends_on:
-        #       - mariadb
+    networks:
+      - inception-network
+
 volumes:
   inception-nginx-log:
     name: 'inception-nginx-log'
@@ -43,3 +53,7 @@ volumes:
   inception-wordpress:
     name: 'inception-wordpress'
 
+networks:
+  inception-network:
+    name: 'inception-network'
+    driver: bridge

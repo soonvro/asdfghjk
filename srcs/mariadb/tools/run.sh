@@ -7,7 +7,7 @@ should_init_db=false
 # Function to update database settings based on environment variables
 update_db_settings() {
     echo "Updating database settings..."
-    mysql -hlocalhost -u root -p'${MYSQL_ROOT_PASSWORD}' << EOF
+    mysql -h localhost -u root -p'${MYSQL_ROOT_PASSWORD}' << EOF
     CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
 
     CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
@@ -22,12 +22,10 @@ update_db_settings() {
 EOF
 }
 
-# set -x
-
 # Check if the database has been initialized and initialize if not
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Database not found, initializing..."
-    mysql_install_db --user=mysql --ldata=/var/lib/mysql
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
     should_init_db=true
 else
     echo "Database already initialized."
@@ -36,7 +34,7 @@ fi
 chown -R mysql:mysql /var/lib/mysql
 
 # Start MariaDB
-mysqld_safe --datadir='/var/lib/mysql' &
+mysqld_safe --user=mysql --datadir='/var/lib/mysql' &
 
 # Wait for MariaDB to fully start with a timeout
 while ! mysqladmin ping --silent; do
@@ -47,15 +45,18 @@ while ! mysqladmin ping --silent; do
         exit 1
     fi
 done
+sleep 5
 
 # Initialize the database if it hasn't been initialized
 if [ "$should_init_db" = true ]; then
-    mysql -u root -e "SET PASSWORD FOR root@'localhost' = PASSWORD('$MYSQL_ROOT_PASSWORD');"
+    mysql -h localhost -uroot << EOF
+    SET PASSWORD FOR root@'localhost' = PASSWORD('$MYSQL_ROOT_PASSWORD');
+EOF
 fi
 
 # Update database settings
 update_db_settings
 
-mysqladmin -u root -p'${MYSQL_ROOT_PASSWORD}' shutdown
+mysqladmin -h localhost -u root -p'${MYSQL_ROOT_PASSWORD}' shutdown
 
-exec "$@"
+exec mysqld_safe --user=mysql --datadir='/var/lib/mysql'
