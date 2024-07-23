@@ -3,25 +3,33 @@ FROM alpine:3.19
 ENV TZ=Asia/Seoul
 
 # Set the timezone
-RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ > /etc/timezone
+RUN set -ex \
+    && apk add --no-cache tzdata \
+    && cp /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone
 
 # Install nginx
-RUN set -x \
-    && apk --no-cache add nginx \
+RUN set -ex \
+    && apk add --no-cache nginx \
     && adduser -D -g 'www' www \
-    && mkdir /www \
     && chown -R www:www /var/lib/nginx \
-    && chown -R www:www /www
-#     && mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.orig
+    && mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.orig
 
-# COPY ./conf/nginx.conf /etc/nginx/nginx.conf
-COPY ./conf/default.conf /etc/nginx/http.d/default.conf
-COPY ./html /www
+# Generate SSL certificate
+RUN set -ex \
+    && apk add --no-cache openssl \
+    && mkdir -p /etc/ssl/certs/ /etc/ssl/private/ \
+    && openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout /etc/ssl/private/nginx-selfsigned.key \
+      -out /etc/ssl/certs/nginx-selfsigned.crt \
+      -subj "/C=KR/ST=Seoul/L=Seoul/O=42/OU=42 Seoul/CN=sokwon.42.fr" \
+    && chown -R www:www /etc/ssl/certs/ /etc/ssl/private/
 
-EXPOSE 80
+COPY ./conf/nginx.conf /etc/nginx/nginx.conf
+COPY ./conf/inception.conf /etc/nginx/http.d/inception.conf
+
+EXPOSE 443
 
 VOLUME ["/var/log/nginx/"]
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx"]

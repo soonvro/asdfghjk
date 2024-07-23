@@ -6,14 +6,17 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
+    image: nginx
     container_name: inception-nginx
-    image: inception-nginx
-    ports:
-      - '80:80'
+    env_file:
+      - .env
     volumes:
       - inception-nginx-log:/var/log/nginx
+      - inception-wordpress-html:/var/www/html/wordpress
     networks:
       - inception-network
+    ports:
+      - '443:443'
     depends_on:
       - mariadb
       - wordpress
@@ -22,11 +25,14 @@ services:
     build:
       context: ./wordpress
       dockerfile: Dockerfile
+    image: wordpress
     container_name: inception-wordpress
     env_file:
       - .env
     volumes:
-      - inception-wordpress:/var/www/html/wordpress
+      - inception-wordpress-html:/var/www/html/wordpress
+    expose:
+      - '9000'
     networks:
       - inception-network
     depends_on:
@@ -36,22 +42,37 @@ services:
     build:
       context: ./mariadb
       dockerfile: Dockerfile
-    image: inception-mariadb
+    image: mariadb
     container_name: inception-mariadb
     env_file:
       - .env
     volumes:
-      - inception-mariadb:/var/lib/mysql
+      - inception-mariadb-data:/var/lib/mysql
+    expose:
+      - '3306'
     networks:
       - inception-network
 
 volumes:
   inception-nginx-log:
     name: 'inception-nginx-log'
-  inception-mariadb:
-    name: 'inception-mariadb'
-  inception-wordpress:
-    name: 'inception-wordpress'
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '${HOME}/data/inception/nginx/log'
+  inception-mariadb-data:
+    name: 'inception-mariadb-data'
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '${HOME}/data/inception/mariadb/data'
+  inception-wordpress-html:
+    name: 'inception-wordpress-html'
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '${HOME}/data/inception/wordpress/html'
 
 networks:
   inception-network:

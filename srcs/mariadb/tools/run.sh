@@ -34,7 +34,7 @@ fi
 chown -R mysql:mysql /var/lib/mysql
 
 # Start MariaDB
-mysqld_safe --user=mysql --datadir='/var/lib/mysql' &
+mysqld &
 
 # Wait for MariaDB to fully start with a timeout
 while ! mysqladmin ping --silent; do
@@ -59,4 +59,4 @@ update_db_settings
 
 mysqladmin -h localhost -u root -p'${MYSQL_ROOT_PASSWORD}' shutdown
 
-exec mysqld_safe --user=mysql --datadir='/var/lib/mysql'
+exec mysqld

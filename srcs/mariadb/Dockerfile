@@ -1,7 +1,6 @@
 FROM alpine:3.19
 
 ENV TZ=Asia/Seoul
-ENV HOME=/root
 
 # Set the timezone and install dumb-init
 RUN set -ex \
@@ -14,13 +13,11 @@ RUN set -ex \
 # Install mariadb
 RUN set -ex \
     && apk --no-cache add mariadb mariadb-client mariadb-server-utils \
-    && addgroup mysql mysql \
-    && mkdir -p /var/run/mysqld \
-    && chown -R mysql:mysql /var/run/mysqld
+    && mv /etc/my.cnf.d/mariadb-server.cnf /etc/my.cnf.d/mariadb-server.cnf.orig \
+    && mkdir -p /run/mysqld \
+    && chown -R mysql:mysql /run/mysqld
 
-# RUN sed -i "s|^skip-networking|#skip-networking|" /etc/my.cnf.d/mariadb-server.cnf &&\
-# 	sed -i "s|^#bind-address|bind-address|" /etc/my.cnf.d/mariadb-server.cnf
-COPY ./conf/inception.cnf $HOME/.my.cnf
+COPY ./conf/inception.cnf /etc/my.cnf.d/mariadb-server.cnf
 COPY ./tools/run.sh /scripts/run.sh
 
 RUN chmod +x /scripts/run.sh
