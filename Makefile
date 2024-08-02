@@ -4,19 +4,19 @@ DOCKER_VOLUME_PATHS	= $(addprefix $(HOME)/data/inception/, mariadb/data wordpres
 
 all: up
 
-up: mkdir
+up: mkdir-volume
 	docker compose -f $(DOCKER_COMPOSE_FILE) up -d
 
 down:
 	docker compose -f $(DOCKER_COMPOSE_FILE) down
 
-re: down mkdir
+re: down mkdir-volume
 	docker compose -f $(DOCKER_COMPOSE_FILE) up -d --build
 
 logs:
 	docker compose -f $(DOCKER_COMPOSE_FILE) logs -f
 
-mkdir:
+mkdir-volume:
 	@for volume in $(DOCKER_VOLUME_PATHS); do \
 		if [ -d "$$volume" ]; then \
 			echo "Directory $$volume already exists."; \
@@ -29,4 +29,4 @@ clean: down
 	docker volume rm $(DOCKER_VOLUMES) > /dev/null 2>&1 && (echo "Success remove volumes") || (echo "Failed to remove volumes")
 	sudo rm -rf $(HOME)/data/inception && (echo "Success remove local data") || (echo "Failed to remove local data")
 
-.PHONY: all up down re logs clean mkdir
+.PHONY: all up down re logs clean mkdir-volume

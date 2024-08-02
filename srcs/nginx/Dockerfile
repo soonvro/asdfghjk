@@ -30,6 +30,4 @@ COPY ./conf/inception.conf /etc/nginx/http.d/inception.conf
 
 EXPOSE 443
 
-VOLUME ["/var/log/nginx/"]
-
 CMD ["nginx"]

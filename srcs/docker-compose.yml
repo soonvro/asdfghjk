@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  nginx:
+  inception-nginx:
     restart: always
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    image: nginx
+    image: inception-nginx
     container_name: inception-nginx
     env_file:
       - .env
@@ -18,14 +18,14 @@ services:
     ports:
       - '443:443'
     depends_on:
-      - mariadb
-      - wordpress
-  wordpress:
+      - inception-mariadb
+      - inception-wordpress
+  inception-wordpress:
     restart: always
     build:
       context: ./wordpress
       dockerfile: Dockerfile
-    image: wordpress
+    image: inception-wordpress
     container_name: inception-wordpress
     env_file:
       - .env
@@ -36,13 +36,13 @@ services:
     networks:
       - inception-network
     depends_on:
-      - mariadb
-  mariadb:
+      - inception-mariadb
+  inception-mariadb:
     restart: always
     build:
       context: ./mariadb
       dockerfile: Dockerfile
-    image: mariadb
+    image: inception-mariadb
     container_name: inception-mariadb
     env_file:
       - .env
